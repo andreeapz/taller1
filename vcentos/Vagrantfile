@@ -1,0 +1,92 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+VAGRANTFILE_API_VERSION = "2"
+CENTOS_BOX = "centos-7.0-x86_64"
+#DB_CENTOS_BOX_NAME    = "vStone/centos-7.x-puppet.3.x"
+#DB_CENTOS_BOX_VERSION = "4.3.26.1"
+Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+config.ssh.pty = true
+
+config.vm.box = CENTOS_BOX
+
+	#--------------------> Nodo 1 <--------------------
+	config.vm.define 'nodo1' do |nodo1|
+	#nodo1.vm.box = DB_CENTOS_BOX_NAME
+	#nodo1.vm.box_version = DB_CENTOS_BOX_VERSION
+		#network
+		nodo1.vm.hostname = 'cas00.datum.com.gt'
+		nodo1.vm.network 'private_network', ip: '5.5.5.0', netmask: '255.255.255.0'
+		nodo1.vm.network 'forwarded_port', guest: 9042, host: 9001
+		#memory
+		nodo1.vm.provider :virtualbox do |vb|
+			vb.memory = 1024
+			vb.cpus = 1
+			vb.gui = true
+		end
+		#shell
+		nodo1.vm.provision "shell", inline: <<-SHELL
+			yum list >/dev/null 2>&1
+			yum install -y puppet >/dev/null 2>&1
+			puppet module install puppetlabs-stdlib
+		SHELL
+		#puppet
+		nodo1.vm.provision :puppet do |puppet|
+			puppet.manifests_path = "manifests"
+			puppet.manifest_file = "configNodo1.pp"
+		end
+	end
+
+	#--------------------> Nodo 2 <--------------------
+	config.vm.define 'nodo2' do |nodo2|
+	#nodo2.vm.box = DB_CENTOS_BOX_NAME
+	#nodo2.vm.box_version = DB_CENTOS_BOX_VERSION
+		#network
+		nodo2.vm.hostname = "cas01.datum.com.gt"
+		nodo2.vm.network 'private_network', ip: '5.5.5.2', netmask: '255.255.255.0'
+		nodo2.vm.network 'forwarded_port', guest: 9042, host: 9002
+		#memory
+		nodo2.vm.provider :virtualbox do |vb|
+			vb.memory = 1024
+			vb.cpus = 1
+		end
+		#shell
+		nodo2.vm.provision "shell", inline: <<-SHELL
+	      yum list >/dev/null 2>&1
+	      yum install -y puppet >/dev/null 2>&1
+	      puppet module install puppetlabs-stdlib
+		SHELL
+		#puppet
+		nodo2.vm.provision :puppet do |puppet|
+			puppet.manifests_path = "manifests"
+			puppet.manifest_file = "configNodo2.pp"
+		end
+	end
+
+	#--------------------> Nodo 3 <--------------------
+#	config.vm.define 'nodo3' do |nodo3|
+#	nodo3.vm.box = CENTOS_BOX
+#	#network
+#	nodo3.vm.hostname = "cas03.datum.com.gt"
+#	nodo3.vm.network 'forwarded_port', guest: 9042, host: 9003
+#	nodo3.vm.network 'private_network', ip: '5.5.5.3', netmask: '255.255.255.0'
+	#memory
+#	nodo3.vm.provider :virtualbox do |vb|
+#	vb.memory = 1024
+#	vb.cpus = 1
+#	end
+	#shell
+#	nodo3.vm.provision "shell", inline: <<-SHELL
+#	      yum list >/dev/null 2>&1
+#	      yum install -y puppet >/dev/null 2>&1
+#	      puppet module install puppetlabs-stdlib
+#	SHELL
+	#puppet
+#	nodo3.vm.provision :puppet do |puppet|
+#	puppet.manifests_path = "manifests"
+#	puppet.manifest_file = "configNodo3.pp"
+	#puppet.options = '--verbose'
+#	end
+#	end
+
+end
